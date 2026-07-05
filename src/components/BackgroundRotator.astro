@@ -147,6 +147,27 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     ).finished;
   }
 
+  function spin(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
+
+    const dir = Math.random() < 0.5 ? 1 : -1;
+
+    return curEl.animate(
+      [
+        { transform: "translate(0, 0) rotate(0deg) scale(1)", opacity: 1, offset: 0 },
+        { transform: "translate(0, 0) rotate(0deg) scale(1.08)", opacity: 1, offset: 0.12 },
+        { transform: `translate(${dir * 25}%, 15%) rotate(${dir * 360}deg) scale(0.55)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(${dir * 65}%, 85%) rotate(${dir * 720}deg) scale(0.1)`, opacity: 1, offset: 0.85 },
+        { transform: `translate(${dir * 80}%, 110%) rotate(${dir * 820}deg) scale(0.02)`, opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "cubic-bezier(.55,0,.85,.35)", fill: "forwards" }
+    ).finished;
+  }
+
   function flip(curEl, nextEl, duration) {
     nextEl.style.zIndex = "1";
     nextEl.style.opacity = "1";
@@ -170,7 +191,32 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     { run: swipe, duration: 700 },
     { run: hit, duration: 900 },
     { run: flip, duration: 800 },
+    { run: spin, duration: 850 },
   ];
+
+  // Shuffle-bag picker (Spotify-style): play through a shuffled bag of all
+  // effects before reshuffling, and never repeat the same effect back-to-back.
+  let bag = [];
+  let lastEffectIndex = -1;
+
+  function refillBag() {
+    bag = effects.map((_, i) => i);
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    if (bag[0] === lastEffectIndex && bag.length > 1) {
+      const swapWith = 1 + Math.floor(Math.random() * (bag.length - 1));
+      [bag[0], bag[swapWith]] = [bag[swapWith], bag[0]];
+    }
+  }
+
+  function nextEffect() {
+    if (bag.length === 0) refillBag();
+    const idx = bag.pop();
+    lastEffectIndex = idx;
+    return effects[idx];
+  }
 
   function scheduleAuto() {
     clearTimeout(timerId);
@@ -186,7 +232,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     const next = (current + 1) % layers.length;
     const curEl = layers[current];
     const nextEl = layers[next];
-    const effect = effects[Math.floor(Math.random() * effects.length)];
+    const effect = nextEffect();
 
     playVideo(nextEl);
 
