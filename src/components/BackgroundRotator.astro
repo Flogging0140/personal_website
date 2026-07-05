@@ -63,7 +63,6 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     opacity: 0;
     z-index: 0;
     backface-visibility: hidden;
-    will-change: transform, opacity;
   }
 
   .bg-layer.active {
@@ -220,6 +219,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     el.style.transform = "none";
     el.style.filter = "none";
     el.style.zIndex = "0";
+    el.style.willChange = "auto";
     el.classList.remove("active");
   }
 
@@ -228,6 +228,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     el.style.transform = "none";
     el.style.filter = "none";
     el.style.zIndex = "2";
+    el.style.willChange = "auto";
     el.classList.add("active");
     if (el.tagName === "IMG") {
       updateAmbient(el.currentSrc || el.src);
@@ -659,6 +660,12 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     const curEl = layers[current];
     const nextEl = layers[next];
     const effect = nextEffect();
+
+    // Only the two layers actually mid-transition get will-change — with
+    // ~50+ background images, hinting it on all of them permanently blew
+    // past the browser's will-change memory budget and got ignored anyway.
+    curEl.style.willChange = "transform, opacity";
+    nextEl.style.willChange = "transform, opacity";
 
     playVideo(nextEl);
 
