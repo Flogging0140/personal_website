@@ -49,14 +49,14 @@ export const links: LinkItem[] = [
   //   href: "https://discord.gg/yourinvite",
   //   emphasis: true,
   // },
-  {
-    label: "Watch my latest YouTube video",
-    href: "https://youtube.com/@FizzyVermin",
-  },
-  {
-    label: "Follow on Instagram",
-    href: "https://instagram.com/fizzyvermin",
-  },
+  // {
+  //   label: "Watch my latest YouTube video",
+  //   href: "https://youtube.com/@FizzyVermin",
+  // },
+  // {
+  //   label: "Follow on Instagram",
+  //   href: "https://instagram.com/fizzyvermin",
+  // },
 ];
 
 export const socials = [

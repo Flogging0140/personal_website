@@ -61,6 +61,17 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
 <script is:inline define:vars={{ intervalMs: backgroundIntervalMs }}>
   const layers = Array.from(document.querySelectorAll(".bg-layer"));
   const flash = document.querySelector(".hit-flash");
+  const ambientLayers = Array.from(document.querySelectorAll(".ambient-layer"));
+  let ambientCurrent = 0;
+
+  function updateAmbient(src) {
+    if (ambientLayers.length < 2) return;
+    const nextIdx = 1 - ambientCurrent;
+    ambientLayers[nextIdx].style.backgroundImage = `url("${src}")`;
+    ambientLayers[nextIdx].classList.add("active");
+    ambientLayers[ambientCurrent].classList.remove("active");
+    ambientCurrent = nextIdx;
+  }
 
   for (let i = layers.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -97,6 +108,9 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     el.style.transform = "none";
     el.style.zIndex = "2";
     el.classList.add("active");
+    if (el.tagName === "IMG") {
+      updateAmbient(el.currentSrc || el.src);
+    }
   }
 
   function crossfade(curEl, nextEl, duration) {

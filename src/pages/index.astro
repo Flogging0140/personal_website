@@ -15,29 +15,37 @@ import "../styles/global.css";
 		<meta name="description" content={profile.tagline} />
 	</head>
 	<body>
-		<BackgroundRotator />
-		<div class="scrim"></div>
+		<div class="ambient-backdrop">
+			<div class="ambient-layer"></div>
+			<div class="ambient-layer"></div>
+		</div>
+		<div class="phone-frame">
+			<BackgroundRotator />
+			<div class="scrim"></div>
 
-		<main class="page">
-			<img class="avatar" src={profile.avatar} alt={profile.name} />
-			<h1 class="name">{profile.name}</h1>
-			<p class="tagline">{profile.tagline}</p>
+			<main class="page">
+				<img class="avatar" src={profile.avatar} alt={profile.name} />
+				<h1 class="name">{profile.name}</h1>
+				<p class="tagline">{profile.tagline}</p>
 
-			<nav class="links">
-				{links.map((link) => (
-					<a
-						class={`link-btn ${link.emphasis ? "emphasis" : ""}`}
-						href={link.href}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						<span class="link-label">{link.label}</span>
-						{link.sublabel && <span class="link-sublabel">{link.sublabel}</span>}
-					</a>
-				))}
-			</nav>
+				{links.length > 0 && (
+					<nav class="links">
+						{links.map((link) => (
+							<a
+								class={`link-btn ${link.emphasis ? "emphasis" : ""}`}
+								href={link.href}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								<span class="link-label">{link.label}</span>
+								{link.sublabel && <span class="link-sublabel">{link.sublabel}</span>}
+							</a>
+						))}
+					</nav>
+				)}
 
-			<SocialIcons />
-		</main>
+				<SocialIcons />
+			</main>
+		</div>
 	</body>
 </html>
