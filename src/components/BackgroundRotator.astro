@@ -18,8 +18,8 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
       <img class="bg-layer" data-index={i} src={item.src} alt="" />
     )
   ))}
-  <div class="hit-flash"></div>
 </div>
+<div class="hit-flash"></div>
 
 <style>
   .bg-rotator {
@@ -49,9 +49,9 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
   }
 
   .hit-flash {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    z-index: 5;
+    z-index: 3;
     background: #ff1e1e;
     opacity: 0;
     pointer-events: none;
@@ -126,19 +126,22 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     nextEl.style.opacity = "1";
     nextEl.style.transform = "none";
     curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
 
-    flash.animate([{ opacity: 0 }, { opacity: 0.55 }, { opacity: 0 }], {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+
+    flash.animate([{ opacity: 0 }, { opacity: 0.75 }, { opacity: 0 }], {
       duration: duration * 0.4,
       easing: "ease-out",
     });
 
     return curEl.animate(
       [
-        { transform: "translateY(0) scale(1)", offset: 0 },
-        { transform: "translateY(-2%) scale(1.02)", offset: 0.15 },
-        { transform: "translateY(10%) scale(0.98)", offset: 0.55 },
-        { transform: "translateY(-4%) scale(0.97)", offset: 0.75 },
-        { transform: "translateY(130%) scale(0.9)", offset: 1 },
+        { transform: "translateY(0) rotate(0deg) scale(1)", offset: 0 },
+        { transform: `translateY(-2%) rotate(${dir * 2}deg) scale(1.02)`, offset: 0.15 },
+        { transform: `translateY(10%) rotate(${dir * 12}deg) scale(0.98)`, offset: 0.55 },
+        { transform: `translateY(-4%) rotate(${dir * 9}deg) scale(0.97)`, offset: 0.75 },
+        { transform: `translateY(130%) rotate(${dir * 20}deg) scale(0.9)`, offset: 1 },
       ],
       { duration, easing: "ease-in", fill: "forwards" }
     ).finished;
