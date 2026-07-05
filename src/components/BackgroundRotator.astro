@@ -18,6 +18,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
       <img class="bg-layer" data-index={i} src={item.src} alt="" />
     )
   ))}
+  <div class="hit-flash"></div>
 </div>
 
 <style>
@@ -26,6 +27,8 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     inset: 0;
     z-index: 0;
     background: #111;
+    overflow: hidden;
+    perspective: 1400px;
   }
 
   .bg-layer {
@@ -35,37 +38,175 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     height: 100%;
     object-fit: cover;
     opacity: 0;
-    transition: opacity 1.2s ease;
+    z-index: 0;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
   }
 
   .bg-layer.active {
     opacity: 1;
+    z-index: 2;
+  }
+
+  .hit-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: #ff1e1e;
+    opacity: 0;
+    pointer-events: none;
   }
 </style>
 
 <script is:inline define:vars={{ intervalMs: backgroundIntervalMs }}>
   const layers = Array.from(document.querySelectorAll(".bg-layer"));
+  const flash = document.querySelector(".hit-flash");
+
   for (let i = layers.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [layers[i], layers[j]] = [layers[j], layers[i]];
   }
+
   let current = 0;
+  let isAnimating = false;
+  let timerId = null;
+
+  function playVideo(el) {
+    if (el.tagName === "VIDEO") {
+      el.currentTime = 0;
+      el.play().catch(() => {});
+    }
+  }
+
+  function pauseVideo(el) {
+    if (el.tagName === "VIDEO") {
+      el.pause();
+    }
+  }
+
+  function resetLayer(el) {
+    el.style.transition = "none";
+    el.style.opacity = "0";
+    el.style.transform = "none";
+    el.style.zIndex = "0";
+    el.classList.remove("active");
+  }
+
+  function promote(el) {
+    el.style.opacity = "1";
+    el.style.transform = "none";
+    el.style.zIndex = "2";
+    el.classList.add("active");
+  }
+
+  function crossfade(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    curEl.style.zIndex = "2";
+    nextEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing: "ease", fill: "forwards" });
+    return curEl.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing: "ease", fill: "forwards" }).finished;
+  }
+
+  function swipe(curEl, nextEl, duration) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    curEl.style.zIndex = "2";
+    nextEl.animate(
+      [{ transform: `translateX(${dir * 100}%)` }, { transform: "translateX(0)" }],
+      { duration, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" }
+    );
+    return curEl.animate(
+      [{ transform: "translateX(0)" }, { transform: `translateX(${dir * -100}%)` }],
+      { duration, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" }
+    ).finished;
+  }
+
+  function hit(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+
+    flash.animate([{ opacity: 0 }, { opacity: 0.55 }, { opacity: 0 }], {
+      duration: duration * 0.4,
+      easing: "ease-out",
+    });
+
+    return curEl.animate(
+      [
+        { transform: "translateY(0) scale(1)", offset: 0 },
+        { transform: "translateY(-2%) scale(1.02)", offset: 0.15 },
+        { transform: "translateY(10%) scale(0.98)", offset: 0.55 },
+        { transform: "translateY(-4%) scale(0.97)", offset: 0.75 },
+        { transform: "translateY(130%) scale(0.9)", offset: 1 },
+      ],
+      { duration, easing: "ease-in", fill: "forwards" }
+    ).finished;
+  }
+
+  function flip(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
+
+    return curEl.animate(
+      [
+        { transform: "rotateY(0deg)", opacity: 1, offset: 0 },
+        { transform: "rotateY(-90deg)", opacity: 1, offset: 0.5 },
+        { transform: "rotateY(-90deg)", opacity: 0, offset: 0.501 },
+        { transform: "rotateY(-90deg)", opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "ease-in", fill: "forwards" }
+    ).finished;
+  }
+
+  const effects = [
+    { run: crossfade, duration: 1100 },
+    { run: swipe, duration: 700 },
+    { run: hit, duration: 900 },
+    { run: flip, duration: 800 },
+  ];
+
+  function scheduleAuto() {
+    clearTimeout(timerId);
+    if (layers.length > 1) {
+      timerId = setTimeout(() => advance(), intervalMs);
+    }
+  }
+
+  function advance() {
+    if (isAnimating || layers.length < 2) return;
+    isAnimating = true;
+
+    const next = (current + 1) % layers.length;
+    const curEl = layers[current];
+    const nextEl = layers[next];
+    const effect = effects[Math.floor(Math.random() * effects.length)];
+
+    playVideo(nextEl);
+
+    effect.run(curEl, nextEl, effect.duration).then(() => {
+      resetLayer(curEl);
+      pauseVideo(curEl);
+      promote(nextEl);
+      curEl.style.transformOrigin = "";
+      current = next;
+      isAnimating = false;
+    });
+
+    scheduleAuto();
+  }
 
   if (layers.length > 0) {
-    layers[0].classList.add("active");
+    promote(layers[0]);
+    playVideo(layers[0]);
+    scheduleAuto();
 
-    if (layers.length > 1) {
-      setInterval(() => {
-        const next = (current + 1) % layers.length;
-        layers[current].classList.remove("active");
-        layers[next].classList.add("active");
-        // restart video playback if it's a video element
-        if (layers[next].tagName === "VIDEO") {
-          layers[next].currentTime = 0;
-          layers[next].play().catch(() => {});
-        }
-        current = next;
-      }, intervalMs);
-    }
+    document.addEventListener("click", (e) => {
+      if (e.target.closest("a, button")) return;
+      advance();
+    });
   }
 </script>
