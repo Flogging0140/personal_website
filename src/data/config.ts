@@ -5,7 +5,7 @@
 export const profile = {
   name: "@FizzyVermin",
   tagline: "Adventures & Building stuff.",
-  avatar: "/src/assets/pfp.jpg",
+  avatar: "/pfp.jpg",
 };
 
 // Background media — just drop files into src/assets/backgrounds/.
