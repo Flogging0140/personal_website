@@ -1,0 +1,71 @@
+---
+import { backgroundMedia, backgroundIntervalMs } from "../data/config";
+---
+
+<div id="bg-rotator" class="bg-rotator">
+  {backgroundMedia.map((item, i) => (
+    item.type === "video" ? (
+      <video
+        class="bg-layer"
+        data-index={i}
+        src={item.src}
+        autoplay
+        muted
+        loop
+        playsinline
+      />
+    ) : (
+      <img class="bg-layer" data-index={i} src={item.src} alt="" />
+    )
+  ))}
+</div>
+
+<style>
+  .bg-rotator {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: #111;
+  }
+
+  .bg-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+
+  .bg-layer.active {
+    opacity: 1;
+  }
+</style>
+
+<script is:inline define:vars={{ intervalMs: backgroundIntervalMs }}>
+  const layers = Array.from(document.querySelectorAll(".bg-layer"));
+  for (let i = layers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [layers[i], layers[j]] = [layers[j], layers[i]];
+  }
+  let current = 0;
+
+  if (layers.length > 0) {
+    layers[0].classList.add("active");
+
+    if (layers.length > 1) {
+      setInterval(() => {
+        const next = (current + 1) % layers.length;
+        layers[current].classList.remove("active");
+        layers[next].classList.add("active");
+        // restart video playback if it's a video element
+        if (layers[next].tagName === "VIDEO") {
+          layers[next].currentTime = 0;
+          layers[next].play().catch(() => {});
+        }
+        current = next;
+      }, intervalMs);
+    }
+  }
+</script>
