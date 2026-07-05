@@ -31,7 +31,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
 </div>
 
 <div class="bubble-curtain">
-  {Array.from({ length: 14 }).map(() => <span class="bubble"></span>)}
+  {Array.from({ length: 16 }).map(() => <span class="bubble"></span>)}
 </div>
 
 <div class="pipe-frame">
@@ -108,18 +108,21 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
 
   .bubble {
     position: absolute;
-    bottom: -25%;
+    bottom: -20%;
     border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
     background: radial-gradient(
-      circle at 32% 28%,
-      rgba(255, 255, 255, 0.95),
-      rgba(190, 225, 255, 0.5) 45%,
-      rgba(120, 180, 240, 0.22) 75%,
-      rgba(120, 180, 240, 0) 100%
+      circle at 30% 26%,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(255, 255, 255, 0.8) 10%,
+      rgba(195, 228, 255, 0.45) 42%,
+      rgba(130, 185, 240, 0.2) 72%,
+      rgba(130, 185, 240, 0) 100%
     );
     box-shadow:
-      inset -3px -3px 8px rgba(255, 255, 255, 0.35),
-      inset 3px 3px 6px rgba(70, 130, 200, 0.3);
+      inset -3px -3px 8px rgba(255, 255, 255, 0.4),
+      inset 3px 3px 6px rgba(70, 130, 200, 0.35),
+      0 0 4px rgba(255, 255, 255, 0.25);
     opacity: 0;
   }
 
@@ -361,33 +364,48 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
 
     const bubbleEls = Array.from(bubbleCurtain.querySelectorAll(".bubble"));
     const n = bubbleEls.length;
-    bubbleEls.forEach((b, i) => {
-      const size = 20 + Math.random() * 24;
-      const left = Math.max(0, Math.min(100 - size, (i / n) * 100 + (Math.random() * 10 - 5)));
-      const delay = Math.random() * duration * 0.2;
-      const wobble = Math.random() * 10 - 5;
+    const slot = 100 / n;
+
+    const riseAnimations = bubbleEls.map((b, i) => {
+      const size = 14 + Math.random() * 12; // smaller + tighter range so each bubble stays distinct
+      const left = Math.max(0, Math.min(100 - size, i * slot + (Math.random() * slot * 0.5 - slot * 0.25)));
+      const maxDelay = duration * 0.22;
+      const delay = Math.random() * maxDelay;
+      const riseDuration = duration - delay; // every bubble finishes by `duration`, none cut off mid-rise
+      const wobble = Math.random() * 8 - 4;
+
+      // `transform: translate(%)` is relative to the bubble's OWN size, not
+      // the viewport — a tiny bubble needs a much bigger % value than a big
+      // one to cover the same physical distance. Compute the travel in
+      // own-size units so every bubble actually clears the top of the
+      // screen, regardless of size (this was the "stuck 3/4 up" bug).
+      const travel = ((120 + size) / size) * 100;
+
       b.style.width = `${size}%`;
       b.style.height = `${size}%`;
       b.style.left = `${left}%`;
-      b.animate(
+
+      return b.animate(
         [
           { transform: "translate(0, 0)", opacity: 0, offset: 0 },
-          { transform: `translate(${wobble * 0.5}%, -55%)`, opacity: 0.95, offset: 0.4 },
-          { transform: `translate(${-wobble}%, -130%)`, opacity: 0.9, offset: 0.75 },
-          { transform: `translate(${wobble * 0.6}%, -190%)`, opacity: 0, offset: 1 },
+          { transform: `translate(${wobble * 0.5}%, ${-travel * 0.35}%)`, opacity: 0.95, offset: 0.35 },
+          { transform: `translate(${-wobble}%, ${-travel * 0.7}%)`, opacity: 0.9, offset: 0.7 },
+          { transform: `translate(${wobble * 0.6}%, ${-travel}%)`, opacity: 0, offset: 1 },
         ],
-        { duration: duration * 0.95, delay, easing: "ease-in-out" }
-      );
+        { duration: riseDuration, delay, easing: "ease-in-out" }
+      ).finished;
     });
 
-    const revealAt = duration * 0.5;
-    return new Promise((resolve) => {
+    const revealAt = duration * 0.45;
+    const revealPromise = new Promise((resolve) => {
       setTimeout(() => {
         curEl.style.transition = "none";
         curEl.style.opacity = "0";
+        resolve();
       }, revealAt);
-      setTimeout(resolve, duration);
     });
+
+    return Promise.all([revealPromise, ...riseAnimations]);
   }
 
   function pipe(curEl, nextEl, duration) {
@@ -451,11 +469,11 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     { run: hit, duration: 900 },
     { run: flip, duration: 800 },
     { run: spin, duration: 850 },
-    // poof and bubbles are implemented below but temporarily left out of
-    // rotation while we confirm the pipe effect looks right on its own.
-    // { run: poof, duration: 950 },
-    // { run: bubbles, duration: 1400 },
     { run: pipe, duration: 1050 },
+    { run: bubbles, duration: 1400 },
+    // poof is implemented below but temporarily left out of rotation while
+    // we confirm bubbles looks right on its own.
+    // { run: poof, duration: 950 },
   ];
 
   // Shuffle-bag picker (Spotify-style): play through a shuffled bag of all
