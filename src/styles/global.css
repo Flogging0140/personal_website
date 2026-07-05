@@ -25,6 +25,7 @@ html, body {
 
 body {
   position: relative;
+  background: #0b0b0d;
 }
 
 /* Dark scrim to keep text/buttons legible over any background media */
@@ -141,6 +142,8 @@ body {
   gap: 18px;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: auto;
+  padding-top: 24px;
 }
 
 .social-icon {
@@ -185,9 +188,53 @@ body {
   display: none;
 }
 
+/* On its own (mobile), .phone-frame just frames the real viewport edges —
+   a bezel ring + notch + home-bar drawn right at the screen boundary,
+   since the "phone" here is the actual device. `transform` (even a no-op
+   one) makes this the containing block for the fixed-position rotator/
+   scrim/hit-flash inside it, so they clip cleanly to the rounded corners.
+   A real `border` is safe here (an auto-width block never overflows from
+   adding one — the browser shrinks the content area to fit), so we use a
+   chunkier grey border plus a couple of inset highlight/shadow rings to
+   fake a bit of 3D bevel depth. Desktop overrides this below with its own
+   floating, centered mockup treatment — untouched by these values. */
 .phone-frame {
   position: relative;
   z-index: 2;
+  transform: translateZ(0);
+  overflow: hidden;
+  border-radius: 34px;
+  border: 14px solid #2b2b30;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.18),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.phone-frame::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 104px;
+  height: 20px;
+  background: #2b2b30;
+  border-radius: 0 0 14px 14px;
+  z-index: 10;
+}
+
+.phone-frame::after {
+  content: "";
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 104px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 10;
 }
 
 /* Desktop: contain the whole card inside a phone-shaped frame, floating
@@ -241,30 +288,19 @@ body {
       0 45px 110px rgba(0, 0, 0, 0.65);
   }
 
+  /* Pin these back to their original values — the base rule above was
+     tuned specifically for the mobile edge-to-edge bezel and now differs
+     (thicker border, different grey, smaller notch/home-bar). */
   .phone-frame::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
     width: 120px;
     height: 24px;
     background: #0b0b0d;
     border-radius: 0 0 16px 16px;
-    z-index: 10;
   }
 
   .phone-frame::after {
-    content: "";
-    position: absolute;
     bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
     width: 120px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.35);
-    z-index: 10;
   }
 
   /* Lighter than the mobile scrim — glass buttons already carry their own
@@ -286,10 +322,5 @@ body {
     min-height: 0;
     overflow-y: auto;
     padding-top: 56px;
-  }
-
-  .phone-frame .socials {
-    margin-top: auto;
-    padding-top: 24px;
   }
 }
