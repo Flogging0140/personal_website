@@ -40,6 +40,10 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
   <div class="pipe-hole"></div>
 </div>
 
+<div class="confetti-burst">
+  {Array.from({ length: 18 }).map(() => <span class="confetti-piece"></span>)}
+</div>
+
 <style>
   .bg-rotator {
     position: fixed;
@@ -78,7 +82,8 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
 
   .poof-cloud,
   .bubble-curtain,
-  .pipe-frame {
+  .pipe-frame,
+  .confetti-burst {
     position: fixed;
     inset: 0;
     z-index: 4;
@@ -160,6 +165,12 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     background: #08260c;
     border-radius: 50%;
   }
+
+  .confetti-piece {
+    position: absolute;
+    border-radius: 1px;
+    opacity: 0;
+  }
 </style>
 
 <script is:inline define:vars={{ intervalMs: backgroundIntervalMs }}>
@@ -168,6 +179,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
   const poofCloud = document.querySelector(".poof-cloud");
   const bubbleCurtain = document.querySelector(".bubble-curtain");
   const pipeFrame = document.querySelector(".pipe-frame");
+  const confettiBurst = document.querySelector(".confetti-burst");
   const ambientLayers = Array.from(document.querySelectorAll(".ambient-layer"));
   let ambientCurrent = 0;
 
@@ -206,6 +218,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     el.style.transition = "none";
     el.style.opacity = "0";
     el.style.transform = "none";
+    el.style.filter = "none";
     el.style.zIndex = "0";
     el.classList.remove("active");
   }
@@ -213,6 +226,7 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
   function promote(el) {
     el.style.opacity = "1";
     el.style.transform = "none";
+    el.style.filter = "none";
     el.style.zIndex = "2";
     el.classList.add("active");
     if (el.tagName === "IMG") {
@@ -463,6 +477,133 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     ).finished;
   }
 
+  function crtOff(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "scaleY(0.02) scaleX(0.4)";
+    nextEl.style.filter = "brightness(3)";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
+
+    // Next photo "powers on" — a thin bright line that snaps out to full
+    // size, like an old CRT warming up. Held at the collapsed state until
+    // curEl has fully pinched away, then expands out.
+    nextEl.animate(
+      [
+        { transform: "scaleY(0.02) scaleX(0.4)", filter: "brightness(3)", offset: 0 },
+        { transform: "scaleY(0.02) scaleX(0.4)", filter: "brightness(3)", offset: 0.62 },
+        { transform: "scaleY(0.3) scaleX(0.9)", filter: "brightness(2)", offset: 0.78 },
+        { transform: "scaleY(1) scaleX(1)", filter: "brightness(1)", offset: 1 },
+      ],
+      { duration, easing: "ease-out", fill: "forwards" }
+    );
+
+    return curEl.animate(
+      [
+        { transform: "scaleY(1) scaleX(1)", filter: "brightness(1)", offset: 0 },
+        { transform: "scaleY(0.5) scaleX(1)", filter: "brightness(1.1)", offset: 0.35 },
+        { transform: "scaleY(0.04) scaleX(1.05)", filter: "brightness(2.6)", offset: 0.55 },
+        { transform: "scaleY(0.02) scaleX(0.2)", filter: "brightness(3.2)", offset: 0.68 },
+        { transform: "scaleY(0.01) scaleX(0.01)", filter: "brightness(0.5)", opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "ease-in", fill: "forwards" }
+    ).finished;
+  }
+
+  function confetti(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
+
+    const pieces = Array.from(confettiBurst.querySelectorAll(".confetti-piece"));
+    const n = pieces.length;
+
+    pieces.forEach((piece, i) => {
+      const size = 3 + Math.random() * 2; // % of container width — small confetti strip
+      const angle = (i / n) * 360 + (Math.random() * 30 - 15);
+      const rad = (angle * Math.PI) / 180;
+      const distance = 28 + Math.random() * 40; // % of the CONTAINER the piece should travel
+
+      // Same fix as the bubble effect: `translate(%)` is relative to the
+      // piece's own tiny size, so scale the travel up to compensate,
+      // otherwise the burst barely moves.
+      const travel = (distance / size) * 100;
+      const dx = Math.cos(rad) * travel;
+      const dyBurst = Math.sin(rad) * travel * 0.55 - travel * 0.18; // upward-biased initial burst
+      const dyFall = dyBurst + travel * 0.5; // gravity pulls it back down after
+      const spins = (2 + Math.random() * 3) * (Math.random() < 0.5 ? 1 : -1);
+      const hue = Math.floor(Math.random() * 360);
+      const delay = Math.random() * duration * 0.12;
+
+      piece.style.width = `${size * 1.6}%`;
+      piece.style.height = `${size}%`;
+      piece.style.left = "50%";
+      piece.style.top = "50%";
+      piece.style.background = `hsl(${hue}, 85%, 60%)`;
+
+      piece.animate(
+        [
+          { transform: "translate(-50%, -50%) rotate(0deg) scale(0.4)", opacity: 0, offset: 0 },
+          {
+            transform: `translate(${-50 + dx * 0.5}%, ${-50 + dyBurst * 0.5}%) rotate(${spins * 180}deg) scale(1)`,
+            opacity: 1,
+            offset: 0.4,
+          },
+          {
+            transform: `translate(${-50 + dx}%, ${-50 + dyFall}%) rotate(${spins * 360}deg) scale(0.85)`,
+            opacity: 0,
+            offset: 1,
+          },
+        ],
+        { duration: duration * 0.9, delay, easing: "ease-out" }
+      );
+    });
+
+    return curEl.animate(
+      [
+        { transform: "scale(1)", opacity: 1, offset: 0 },
+        { transform: "scale(1.12)", opacity: 1, offset: 0.18 },
+        { transform: "scale(0.85)", opacity: 0.6, offset: 0.42 },
+        { transform: "scale(0.3)", opacity: 0, offset: 0.68 },
+        { transform: "scale(0.3)", opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "ease-in", fill: "forwards" }
+    ).finished;
+  }
+
+  function vacuum(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "scale(0.85)";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
+
+    const dir = Math.random() < 0.5 ? 1 : -1;
+
+    nextEl.animate(
+      [
+        { transform: "scale(0.85)", offset: 0 },
+        { transform: "scale(0.85)", offset: 0.55 },
+        { transform: "scale(1.05)", offset: 0.82 },
+        { transform: "scale(1)", offset: 1 },
+      ],
+      { duration, easing: "ease-out", fill: "forwards" }
+    );
+
+    return curEl.animate(
+      [
+        { transform: "rotate(0deg) scale(1)", opacity: 1, offset: 0 },
+        { transform: `rotate(${dir * 120}deg) scale(0.85)`, opacity: 1, offset: 0.3 },
+        { transform: `rotate(${dir * 320}deg) scale(0.45)`, opacity: 1, offset: 0.6 },
+        { transform: `rotate(${dir * 620}deg) scale(0.08)`, opacity: 0.6, offset: 0.85 },
+        { transform: `rotate(${dir * 760}deg) scale(0.01)`, opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "cubic-bezier(.7,0,.9,.4)", fill: "forwards" }
+    ).finished;
+  }
+
   const effects = [
     { run: crossfade, duration: 1100 },
     { run: swipe, duration: 700 },
@@ -471,8 +612,11 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     { run: spin, duration: 850 },
     { run: pipe, duration: 1050 },
     { run: bubbles, duration: 1400 },
+    { run: crtOff, duration: 900 },
+    { run: confetti, duration: 1000 },
+    { run: vacuum, duration: 900 },
     // poof is implemented below but temporarily left out of rotation while
-    // we confirm bubbles looks right on its own.
+    // we confirm the newest batch (crtOff/confetti/vacuum) looks right.
     // { run: poof, duration: 950 },
   ];
 
