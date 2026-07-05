@@ -21,6 +21,25 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
 </div>
 <div class="hit-flash"></div>
 
+<div class="poof-cloud">
+  <span class="puff"></span>
+  <span class="puff"></span>
+  <span class="puff"></span>
+  <span class="puff"></span>
+  <span class="puff"></span>
+  <span class="puff"></span>
+</div>
+
+<div class="bubble-curtain">
+  {Array.from({ length: 14 }).map(() => <span class="bubble"></span>)}
+</div>
+
+<div class="pipe-frame">
+  <div class="pipe-body"></div>
+  <div class="pipe-collar"></div>
+  <div class="pipe-hole"></div>
+</div>
+
 <style>
   .bg-rotator {
     position: fixed;
@@ -56,11 +75,96 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     opacity: 0;
     pointer-events: none;
   }
+
+  .poof-cloud,
+  .bubble-curtain,
+  .pipe-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* Only the pipe controls visibility at the container level (fading the
+     whole graphic in/out); poof and bubbles animate each child's own
+     opacity individually, so their containers must stay fully opaque. */
+  .pipe-frame {
+    opacity: 0;
+  }
+
+  .puff {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 35% 35%,
+      rgba(255, 255, 255, 0.95),
+      rgba(225, 225, 230, 0.55) 55%,
+      rgba(210, 210, 215, 0) 75%
+    );
+    opacity: 0;
+    filter: blur(1px);
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -25%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 32% 28%,
+      rgba(255, 255, 255, 0.95),
+      rgba(190, 225, 255, 0.5) 45%,
+      rgba(120, 180, 240, 0.22) 75%,
+      rgba(120, 180, 240, 0) 100%
+    );
+    box-shadow:
+      inset -3px -3px 8px rgba(255, 255, 255, 0.35),
+      inset 3px 3px 6px rgba(70, 130, 200, 0.3);
+    opacity: 0;
+  }
+
+  .pipe-body {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 30%;
+    height: 22%;
+    background: linear-gradient(90deg, #146614 0%, #2f9e2f 14%, #74da74 45%, #2f9e2f 80%, #146614 100%);
+    border: 4px solid #0a3d0a;
+    border-bottom: none;
+  }
+
+  .pipe-collar {
+    position: absolute;
+    left: 50%;
+    bottom: 17%;
+    transform: translateX(-50%);
+    width: 42%;
+    height: 9%;
+    background: linear-gradient(90deg, #146614 0%, #2f9e2f 14%, #74da74 45%, #2f9e2f 80%, #146614 100%);
+    border: 4px solid #0a3d0a;
+    border-radius: 14px;
+  }
+
+  .pipe-hole {
+    position: absolute;
+    left: 50%;
+    bottom: 19.5%;
+    transform: translateX(-50%);
+    width: 30%;
+    height: 5%;
+    background: #08260c;
+    border-radius: 50%;
+  }
 </style>
 
 <script is:inline define:vars={{ intervalMs: backgroundIntervalMs }}>
   const layers = Array.from(document.querySelectorAll(".bg-layer"));
   const flash = document.querySelector(".hit-flash");
+  const poofCloud = document.querySelector(".poof-cloud");
+  const bubbleCurtain = document.querySelector(".bubble-curtain");
+  const pipeFrame = document.querySelector(".pipe-frame");
   const ambientLayers = Array.from(document.querySelectorAll(".ambient-layer"));
   let ambientCurrent = 0;
 
@@ -200,12 +304,158 @@ import { backgroundMedia, backgroundIntervalMs } from "../data/config";
     ).finished;
   }
 
+  function poof(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "center center";
+
+    const puffOffsets = [
+      { x: -22, y: -8 },
+      { x: 20, y: -14 },
+      { x: -10, y: 12 },
+      { x: 12, y: 16 },
+      { x: -24, y: 4 },
+      { x: 24, y: -2 },
+    ];
+
+    Array.from(poofCloud.querySelectorAll(".puff")).forEach((puff, i) => {
+      const { x, y } = puffOffsets[i % puffOffsets.length];
+      const size = 26 + Math.random() * 18;
+      puff.style.width = `${size}%`;
+      puff.style.height = `${size}%`;
+      puff.style.left = `${50 - size / 2}%`;
+      puff.style.top = `${50 - size / 2}%`;
+      puff.animate(
+        [
+          { transform: "translate(0, 0) scale(0.25)", opacity: 0, offset: 0 },
+          { transform: `translate(${x * 0.4}%, ${y * 0.4}%) scale(0.9)`, opacity: 0.9, offset: 0.5 },
+          { transform: `translate(${x}%, ${y}%) scale(1.5)`, opacity: 0, offset: 1 },
+        ],
+        { duration: duration * 0.85, delay: duration * 0.25 + i * 25, easing: "ease-out" }
+      );
+    });
+
+    return curEl.animate(
+      [
+        { transform: "translate(0, 0) rotate(0deg) scale(1)", offset: 0 },
+        { transform: "translate(-1.5%, 0) rotate(-4deg) scale(1)", offset: 0.12 },
+        { transform: "translate(1.5%, 0) rotate(4deg) scale(1)", offset: 0.24 },
+        { transform: "translate(-1%, 0) rotate(-3deg) scale(1)", offset: 0.36 },
+        { transform: "translate(0, 0) rotate(0deg) scale(0.94)", offset: 0.48 },
+        { transform: "translate(0, -4%) rotate(0deg) scale(0.4)", opacity: 1, offset: 0.72 },
+        { transform: "translate(0, -6%) rotate(0deg) scale(0.1)", opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "ease-in", fill: "forwards" }
+    ).finished;
+  }
+
+  function bubbles(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+    curEl.style.opacity = "1";
+    curEl.style.transform = "none";
+
+    const bubbleEls = Array.from(bubbleCurtain.querySelectorAll(".bubble"));
+    const n = bubbleEls.length;
+    bubbleEls.forEach((b, i) => {
+      const size = 20 + Math.random() * 24;
+      const left = Math.max(0, Math.min(100 - size, (i / n) * 100 + (Math.random() * 10 - 5)));
+      const delay = Math.random() * duration * 0.2;
+      const wobble = Math.random() * 10 - 5;
+      b.style.width = `${size}%`;
+      b.style.height = `${size}%`;
+      b.style.left = `${left}%`;
+      b.animate(
+        [
+          { transform: "translate(0, 0)", opacity: 0, offset: 0 },
+          { transform: `translate(${wobble * 0.5}%, -55%)`, opacity: 0.95, offset: 0.4 },
+          { transform: `translate(${-wobble}%, -130%)`, opacity: 0.9, offset: 0.75 },
+          { transform: `translate(${wobble * 0.6}%, -190%)`, opacity: 0, offset: 1 },
+        ],
+        { duration: duration * 0.95, delay, easing: "ease-in-out" }
+      );
+    });
+
+    const revealAt = duration * 0.5;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        curEl.style.transition = "none";
+        curEl.style.opacity = "0";
+      }, revealAt);
+      setTimeout(resolve, duration);
+    });
+  }
+
+  function pipe(curEl, nextEl, duration) {
+    nextEl.style.zIndex = "1";
+    nextEl.style.opacity = "1";
+    nextEl.style.transform = "none";
+    curEl.style.zIndex = "2";
+    curEl.style.transformOrigin = "50% 75%";
+
+    pipeFrame.animate(
+      [
+        { opacity: 0, offset: 0 },
+        { opacity: 1, offset: 0.14 },
+        { opacity: 1, offset: 0.9 },
+        { opacity: 0, offset: 1 },
+      ],
+      { duration, easing: "ease" }
+    );
+
+    // Every clip-path keyframe keeps 4 polygon points (even when two of
+    // them coincide) so the browser can interpolate smoothly between them
+    // instead of jump-cutting. Bottom corners pull in first — a paper-fold/
+    // funnel taper — before the top follows, while translateY/scale carry
+    // the whole thing down and in toward the pipe opening.
+    return curEl.animate(
+      [
+        {
+          transform: "translateY(0) scale(1)",
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+          offset: 0,
+        },
+        {
+          transform: "translateY(-6%) scale(0.92)",
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+          offset: 0.22,
+        },
+        {
+          transform: "translateY(-3%) scale(0.88)",
+          clipPath: "polygon(0% 0%, 100% 0%, 78% 100%, 22% 100%)",
+          offset: 0.42,
+        },
+        {
+          transform: "translateY(18%) scale(0.55)",
+          clipPath: "polygon(15% 0%, 85% 0%, 50% 100%, 50% 100%)",
+          offset: 0.72,
+        },
+        {
+          transform: "translateY(42%) scale(0.15)",
+          clipPath: "polygon(35% 0%, 65% 0%, 50% 100%, 50% 100%)",
+          opacity: 0,
+          offset: 1,
+        },
+      ],
+      { duration, easing: "cubic-bezier(.6,0,.85,.35)", fill: "forwards" }
+    ).finished;
+  }
+
   const effects = [
     { run: crossfade, duration: 1100 },
     { run: swipe, duration: 700 },
     { run: hit, duration: 900 },
     { run: flip, duration: 800 },
     { run: spin, duration: 850 },
+    // poof and bubbles are implemented below but temporarily left out of
+    // rotation while we confirm the pipe effect looks right on its own.
+    // { run: poof, duration: 950 },
+    // { run: bubbles, duration: 1400 },
+    { run: pipe, duration: 1050 },
   ];
 
   // Shuffle-bag picker (Spotify-style): play through a shuffled bag of all
