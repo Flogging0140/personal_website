@@ -207,26 +207,26 @@ const memeFiles = fs.existsSync(memesDir)
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 		const bands = [
-			{ baseFreq: 0.88, wobbleAmp: 0.015, wobbleSpeed: 0.6, width: 24, strength: 0.6, phase: Math.random() * 6, burstSpeed: 1.1 },
-			{ baseFreq: 0.74, wobbleAmp: 0.02, wobbleSpeed: 0.8, width: 13, strength: 0.32, phase: Math.random() * 6, burstSpeed: 1.6 },
-			{ baseFreq: 0.42, wobbleAmp: 0.18, wobbleSpeed: 0.3, width: 5, strength: 0.16, phase: Math.random() * 6, burstSpeed: 2.1 },
-			{ baseFreq: 0.22, wobbleAmp: 0.12, wobbleSpeed: 0.45, width: 4, strength: 0.13, phase: Math.random() * 6, burstSpeed: 1.4 },
+			{ baseFreq: 0.88, wobbleAmp: 0.015, wobbleSpeed: 0.6, width: 26, strength: 0.75, phase: Math.random() * 6, burstSpeed: 1.1 },
+			{ baseFreq: 0.74, wobbleAmp: 0.02, wobbleSpeed: 0.8, width: 15, strength: 0.45, phase: Math.random() * 6, burstSpeed: 1.6 },
+			{ baseFreq: 0.42, wobbleAmp: 0.18, wobbleSpeed: 0.3, width: 6, strength: 0.28, phase: Math.random() * 6, burstSpeed: 2.1 },
+			{ baseFreq: 0.22, wobbleAmp: 0.12, wobbleSpeed: 0.45, width: 5, strength: 0.24, phase: Math.random() * 6, burstSpeed: 1.4 },
 		];
 
 		function colorFor(t: number): [number, number, number, number] {
 			if (t < 0.02) return [11, 15, 20, 0];
 			if (t < 0.55) {
 				const k = t / 0.55;
-				return [11 + 26 * k, 15 + 82 * k, 20 + 96 * k, 0.12 + 0.38 * k];
+				return [11 + 26 * k, 15 + 82 * k, 20 + 96 * k, 0.28 + 0.4 * k];
 			}
 			const k = (t - 0.55) / 0.45;
-			return [37 + 178 * k, 97 + 5 * k, 116 + 76 * k, 0.5 + 0.4 * k];
+			return [37 + 178 * k, 97 + 5 * k, 116 + 76 * k, 0.68 + 0.3 * k];
 		}
 
 		function columnAt(time: number): Float32Array {
 			const col = new Float32Array(H);
 			for (let y = 0; y < H; y++) {
-				let intensity = 0.015;
+				let intensity = 0.06;
 				for (const b of bands) {
 					const centerY = (b.baseFreq + b.wobbleAmp * Math.sin(time * b.wobbleSpeed + b.phase)) * H;
 					const dist = y - centerY;
