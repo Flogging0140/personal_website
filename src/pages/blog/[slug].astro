@@ -37,16 +37,44 @@ const memeFiles = fs.existsSync(memesDir)
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{post.data.title}</title>
 		<meta name="description" content={post.data.description} />
+		{post.id === "train-project" && (
+			<>
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+				<link
+					rel="stylesheet"
+					href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+				/>
+			</>
+		)}
 	</head>
-	<body class="blog-body">
+	<body class={post.id === "train-project" ? "blog-body post-train-project" : "blog-body"}>
 		<article class="blog-page">
-			<a class="blog-back" href="/blog/">&larr; Writing</a>
-			<h1 class="blog-title">{post.data.title}</h1>
-			<div class="blog-byline">
-				<span>{profile.name}</span>
-				<span aria-hidden="true">·</span>
-				<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
-			</div>
+			{post.id === "train-project" ? (
+				<header class="post-hero">
+					<canvas class="post-hero-canvas" width="800" height="220"></canvas>
+					<div class="post-hero-sweep"></div>
+					<div class="post-hero-scrim"></div>
+					<div class="post-hero-content">
+						<a class="blog-back" href="/blog/">&larr; Writing</a>
+						<h1 class="blog-title">{post.data.title}</h1>
+						<div class="blog-byline">
+							<span>{profile.name}</span>
+							<span aria-hidden="true">·</span>
+							<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
+						</div>
+					</div>
+				</header>
+			) : (
+				<>
+					<a class="blog-back" href="/blog/">&larr; Writing</a>
+					<h1 class="blog-title">{post.data.title}</h1>
+					<div class="blog-byline">
+						<span>{profile.name}</span>
+						<span aria-hidden="true">·</span>
+						<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
+					</div>
+				</>
+			)}
 			<div class="blog-content">
 				<Content />
 			</div>
@@ -166,4 +194,78 @@ const memeFiles = fs.existsSync(memesDir)
 		update();
 		start();
 	});
+</script>
+
+<script>
+	(function initHeroSpectrogram() {
+		const canvas = document.querySelector<HTMLCanvasElement>(".post-hero-canvas");
+		if (!canvas) return;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+		const W = canvas.width;
+		const H = canvas.height;
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		const bands = [
+			{ baseFreq: 0.88, wobbleAmp: 0.015, wobbleSpeed: 0.6, width: 24, strength: 0.6, phase: Math.random() * 6, burstSpeed: 1.1 },
+			{ baseFreq: 0.74, wobbleAmp: 0.02, wobbleSpeed: 0.8, width: 13, strength: 0.32, phase: Math.random() * 6, burstSpeed: 1.6 },
+			{ baseFreq: 0.42, wobbleAmp: 0.18, wobbleSpeed: 0.3, width: 5, strength: 0.16, phase: Math.random() * 6, burstSpeed: 2.1 },
+			{ baseFreq: 0.22, wobbleAmp: 0.12, wobbleSpeed: 0.45, width: 4, strength: 0.13, phase: Math.random() * 6, burstSpeed: 1.4 },
+		];
+
+		function colorFor(t: number): [number, number, number, number] {
+			if (t < 0.02) return [11, 15, 20, 0];
+			if (t < 0.55) {
+				const k = t / 0.55;
+				return [11 + 26 * k, 15 + 82 * k, 20 + 96 * k, 0.12 + 0.38 * k];
+			}
+			const k = (t - 0.55) / 0.45;
+			return [37 + 178 * k, 97 + 5 * k, 116 + 76 * k, 0.5 + 0.4 * k];
+		}
+
+		function columnAt(time: number): Float32Array {
+			const col = new Float32Array(H);
+			for (let y = 0; y < H; y++) {
+				let intensity = 0.015;
+				for (const b of bands) {
+					const centerY = (b.baseFreq + b.wobbleAmp * Math.sin(time * b.wobbleSpeed + b.phase)) * H;
+					const dist = y - centerY;
+					const band = Math.exp(-(dist * dist) / (2 * b.width * b.width));
+					const burst = 0.65 + 0.35 * Math.sin(time * b.burstSpeed + b.phase * 2);
+					intensity += band * b.strength * burst;
+				}
+				intensity += (Math.random() - 0.5) * 0.035;
+				col[y] = Math.max(0, Math.min(1, intensity));
+			}
+			return col;
+		}
+
+		function drawColumn(x: number, col: Float32Array) {
+			const colImg = ctx!.createImageData(1, H);
+			for (let y = 0; y < H; y++) {
+				const [r, g, bl, a] = colorFor(col[y]);
+				const idx = y * 4;
+				colImg.data[idx] = r;
+				colImg.data[idx + 1] = g;
+				colImg.data[idx + 2] = bl;
+				colImg.data[idx + 3] = a * 255;
+			}
+			ctx!.putImageData(colImg, x, 0);
+		}
+
+		let t = 0;
+		for (let x = 0; x < W; x++) {
+			t += 0.04;
+			drawColumn(x, columnAt(t));
+		}
+
+		if (reduceMotion) return;
+
+		setInterval(() => {
+			const shifted = ctx!.getImageData(1, 0, W - 1, H);
+			ctx!.putImageData(shifted, 0, 0);
+			t += 0.04;
+			drawColumn(W - 1, columnAt(t));
+		}, 220);
+	})();
 </script>
