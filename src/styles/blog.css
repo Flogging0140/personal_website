@@ -1,9 +1,16 @@
+html {
+  overflow-x: hidden;
+  touch-action: pan-y;
+}
+
 .blog-body {
   margin: 0;
   min-height: 100vh;
   background: #fbfbfa;
   color: #1a1a1a;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  touch-action: pan-y;
 }
 
 .blog-page {
@@ -413,6 +420,12 @@ body.post-train-project {
 
 .post-train-project .katex {
   color: #e8ecef;
+}
+
+.blog-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
 }
 
 /* ---- Full-page background: live-scrolling spectrogram behind everything ---- */
