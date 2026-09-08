@@ -1,0 +1,169 @@
+---
+import fs from "node:fs";
+import { getCollection, render } from "astro:content";
+import { profile } from "../../data/config";
+import "../../styles/blog.css";
+import "katex/dist/katex.min.css";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog");
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const formattedDate = post.data.date.toLocaleDateString("en-US", {
+	year: "numeric",
+	month: "long",
+	day: "numeric",
+});
+
+const memesDir = new URL(`../../../public/blog/${post.id}/memes/`, import.meta.url);
+const memeFiles = fs.existsSync(memesDir)
+	? fs
+			.readdirSync(memesDir)
+			.filter((file) => /\.(png|jpe?g|gif|webp)$/i.test(file))
+			.sort()
+	: [];
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{post.data.title}</title>
+		<meta name="description" content={post.data.description} />
+	</head>
+	<body class="blog-body">
+		<article class="blog-page">
+			<a class="blog-back" href="/blog/">&larr; Writing</a>
+			<h1 class="blog-title">{post.data.title}</h1>
+			<div class="blog-byline">
+				<span>{profile.name}</span>
+				<span aria-hidden="true">·</span>
+				<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
+			</div>
+			<div class="blog-content">
+				<Content />
+			</div>
+
+			{memeFiles.length > 0 && (
+				<section class="meme-section" aria-label="Memeable moments">
+					<h2 class="meme-heading">Memeable Moments</h2>
+					<div class="carousel" data-carousel>
+						<div class="carousel-track">
+							{memeFiles.map((file, i) => (
+								<div class={`carousel-slide${i === 0 ? " is-active" : ""}`}>
+									<img src={`/blog/${post.id}/memes/${file}`} alt="" loading="lazy" />
+								</div>
+							))}
+						</div>
+						{memeFiles.length > 1 && (
+							<>
+								<button
+									type="button"
+									class="carousel-arrow carousel-arrow-prev"
+									aria-label="Previous meme"
+									data-dir="-1"
+								>
+									‹
+								</button>
+								<button
+									type="button"
+									class="carousel-arrow carousel-arrow-next"
+									aria-label="Next meme"
+									data-dir="1"
+								>
+									›
+								</button>
+							</>
+						)}
+					</div>
+				</section>
+			)}
+		</article>
+	</body>
+</html>
+
+<script>
+	document.querySelectorAll<HTMLElement>("[data-carousel]").forEach((carousel) => {
+		const track = carousel.querySelector<HTMLElement>(".carousel-track");
+		if (!track) return;
+		const slides = Array.from(track.children) as HTMLElement[];
+		if (slides.length <= 1) return;
+
+		const prev = carousel.querySelector<HTMLButtonElement>(".carousel-arrow-prev");
+		const next = carousel.querySelector<HTMLButtonElement>(".carousel-arrow-next");
+		const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const intervalMs = 5000;
+		let index = 0;
+		let timer: ReturnType<typeof setInterval> | undefined;
+
+		function gapPx(): number {
+			const style = window.getComputedStyle(track!);
+			return parseFloat(style.columnGap || style.gap || "0") || 0;
+		}
+
+		function slideOffset(i: number): number {
+			const gap = gapPx();
+			let offset = 0;
+			for (let j = 0; j < i; j++) {
+				offset += slides[j].offsetWidth + gap;
+			}
+			return offset;
+		}
+
+		function update() {
+			slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+			const containerWidth = carousel.clientWidth;
+			const activeWidth = slides[index].offsetWidth;
+			const translate = slideOffset(index) - (containerWidth - activeWidth) / 2;
+			if (track) track.style.transform = `translateX(-${translate}px)`;
+		}
+
+		function goTo(i: number) {
+			index = (i + slides.length) % slides.length;
+			update();
+		}
+
+		function stepNext() {
+			goTo(index + 1);
+		}
+
+		function stepPrev() {
+			goTo(index - 1);
+		}
+
+		function stop() {
+			clearInterval(timer);
+		}
+
+		function start() {
+			stop();
+			if (prefersReducedMotion) return;
+			timer = setInterval(stepNext, intervalMs);
+		}
+
+		prev?.addEventListener("click", () => {
+			stepPrev();
+			start();
+		});
+		next?.addEventListener("click", () => {
+			stepNext();
+			start();
+		});
+
+		carousel.addEventListener("mouseenter", stop);
+		carousel.addEventListener("mouseleave", start);
+		carousel.addEventListener("focusin", stop);
+		carousel.addEventListener("focusout", start);
+		window.addEventListener("resize", update);
+
+		update();
+		start();
+	});
+</script>

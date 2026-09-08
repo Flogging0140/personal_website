@@ -1,0 +1,36 @@
+---
+import { getCollection } from "astro:content";
+import { profile } from "../../data/config";
+import "../../styles/blog.css";
+
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Writing — {profile.name}</title>
+	</head>
+	<body class="blog-body">
+		<div class="blog-page">
+			<a class="blog-back" href="/">&larr; {profile.name}</a>
+			<h1 class="blog-index-title">Writing</h1>
+			<ul class="blog-index-list">
+				{posts.map((post) => (
+					<li>
+						<a class="blog-index-link" href={`/blog/${post.id}/`}>
+							<span class="blog-index-post-title">{post.data.title}</span>
+							<span class="blog-index-post-desc">{post.data.description}</span>
+							<time class="blog-index-post-date" datetime={post.data.date.toISOString()}>
+								{post.data.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+							</time>
+						</a>
+					</li>
+				))}
+			</ul>
+		</div>
+	</body>
+</html>
