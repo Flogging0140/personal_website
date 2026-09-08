@@ -468,7 +468,8 @@ body.post-train-project {
 .post-train-project .blog-page {
   position: relative;
   z-index: 2;
-  background: #12181f;
+  background: rgba(18, 24, 31, 0.94);
+  backdrop-filter: blur(4px);
   border: 1px solid rgba(217, 112, 201, 0.14);
   border-radius: 20px;
   margin-top: 32px;
