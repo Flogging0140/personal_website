@@ -48,33 +48,20 @@ const memeFiles = fs.existsSync(memesDir)
 		)}
 	</head>
 	<body class={post.id === "train-project" ? "blog-body post-train-project" : "blog-body"}>
+		{post.id === "train-project" && (
+			<>
+				<canvas class="page-bg-canvas" width="960" height="640"></canvas>
+				<div class="page-bg-sweep"></div>
+			</>
+		)}
 		<article class="blog-page">
-			{post.id === "train-project" ? (
-				<header class="post-hero">
-					<canvas class="post-hero-canvas" width="800" height="220"></canvas>
-					<div class="post-hero-sweep"></div>
-					<div class="post-hero-scrim"></div>
-					<div class="post-hero-content">
-						<a class="blog-back" href="/blog/">&larr; Writing</a>
-						<h1 class="blog-title">{post.data.title}</h1>
-						<div class="blog-byline">
-							<span>{profile.name}</span>
-							<span aria-hidden="true">·</span>
-							<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
-						</div>
-					</div>
-				</header>
-			) : (
-				<>
-					<a class="blog-back" href="/blog/">&larr; Writing</a>
-					<h1 class="blog-title">{post.data.title}</h1>
-					<div class="blog-byline">
-						<span>{profile.name}</span>
-						<span aria-hidden="true">·</span>
-						<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
-					</div>
-				</>
-			)}
+			<a class="blog-back" href="/blog/">&larr; Writing</a>
+			<h1 class="blog-title">{post.data.title}</h1>
+			<div class="blog-byline">
+				<span>{profile.name}</span>
+				<span aria-hidden="true">·</span>
+				<time datetime={post.data.date.toISOString()}>{formattedDate}</time>
+			</div>
 			<div class="blog-content">
 				<Content />
 			</div>
@@ -197,8 +184,8 @@ const memeFiles = fs.existsSync(memesDir)
 </script>
 
 <script>
-	(function initHeroSpectrogram() {
-		const canvas = document.querySelector<HTMLCanvasElement>(".post-hero-canvas");
+	(function initPageBackgroundSpectrogram() {
+		const canvas = document.querySelector<HTMLCanvasElement>(".page-bg-canvas");
 		if (!canvas) return;
 		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
@@ -207,10 +194,10 @@ const memeFiles = fs.existsSync(memesDir)
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 		const bands = [
-			{ baseFreq: 0.88, wobbleAmp: 0.015, wobbleSpeed: 0.6, width: 26, strength: 0.75, phase: Math.random() * 6, burstSpeed: 1.1 },
-			{ baseFreq: 0.74, wobbleAmp: 0.02, wobbleSpeed: 0.8, width: 15, strength: 0.45, phase: Math.random() * 6, burstSpeed: 1.6 },
-			{ baseFreq: 0.42, wobbleAmp: 0.18, wobbleSpeed: 0.3, width: 6, strength: 0.28, phase: Math.random() * 6, burstSpeed: 2.1 },
-			{ baseFreq: 0.22, wobbleAmp: 0.12, wobbleSpeed: 0.45, width: 5, strength: 0.24, phase: Math.random() * 6, burstSpeed: 1.4 },
+			{ baseFreq: 0.88, wobbleAmp: 0.015, wobbleSpeed: 0.6, width: 76, strength: 0.75, phase: Math.random() * 6, burstSpeed: 1.1 },
+			{ baseFreq: 0.74, wobbleAmp: 0.02, wobbleSpeed: 0.8, width: 44, strength: 0.45, phase: Math.random() * 6, burstSpeed: 1.6 },
+			{ baseFreq: 0.42, wobbleAmp: 0.18, wobbleSpeed: 0.3, width: 17, strength: 0.28, phase: Math.random() * 6, burstSpeed: 2.1 },
+			{ baseFreq: 0.22, wobbleAmp: 0.12, wobbleSpeed: 0.45, width: 15, strength: 0.24, phase: Math.random() * 6, burstSpeed: 1.4 },
 		];
 
 		function colorFor(t: number): [number, number, number, number] {

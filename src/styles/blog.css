@@ -415,59 +415,61 @@ body.post-train-project {
   color: #e8ecef;
 }
 
-/* ---- Hero: live-scrolling spectrogram behind the title/byline ---- */
+/* ---- Full-page background: live-scrolling spectrogram behind everything ---- */
 
-.post-train-project .post-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 14px;
-  margin-bottom: 2.2em;
-}
-
-.post-train-project .post-hero-canvas {
-  position: absolute;
+.post-train-project .page-bg-canvas {
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-}
-
-.post-train-project .post-hero-sweep {
-  position: absolute;
-  inset: -25%;
-  z-index: 1;
-  background: radial-gradient(circle at 30% 35%, rgba(210, 70, 200, 0.32), transparent 55%);
-  mix-blend-mode: screen;
-  animation: post-hero-sweep-drift 22s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
-@keyframes post-hero-sweep-drift {
+.post-train-project .page-bg-sweep {
+  position: fixed;
+  inset: -25%;
+  z-index: 1;
+  background: radial-gradient(circle at 30% 35%, rgba(210, 70, 200, 0.3), transparent 55%);
+  mix-blend-mode: screen;
+  animation: page-bg-sweep-drift 26s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes page-bg-sweep-drift {
   0%   { transform: translate(-6%, -4%) scale(1); }
   50%  { transform: translate(6%, 5%) scale(1.08); }
   100% { transform: translate(-3%, 6%) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .post-train-project .post-hero-sweep {
+  .post-train-project .page-bg-sweep {
     animation: none;
   }
 }
 
-.post-train-project .post-hero-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: linear-gradient(100deg, rgba(11, 15, 20, 0.58) 0%, rgba(11, 15, 20, 0.32) 45%, rgba(11, 15, 20, 0.08) 100%);
-  pointer-events: none;
-}
+/* Content floats in a solid card above the animated background so the
+   long-form body text, code, and tables stay readable regardless of
+   what's happening behind it. */
 
-.post-train-project .post-hero-content {
+.post-train-project .blog-page {
   position: relative;
-  z-index: 3;
-  padding: 44px 28px 40px;
+  z-index: 2;
+  background: #12181f;
+  border: 1px solid rgba(217, 112, 201, 0.14);
+  border-radius: 20px;
+  margin-top: 32px;
+  margin-bottom: 32px;
+  padding-left: 40px;
+  padding-right: 40px;
 }
 
-.post-train-project .post-hero .blog-back {
-  margin-bottom: 28px;
+@media (max-width: 640px) {
+  .post-train-project .blog-page {
+    border-radius: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
