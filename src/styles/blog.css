@@ -445,7 +445,7 @@ body.post-train-project {
   z-index: 1;
   background: radial-gradient(circle at 30% 35%, rgba(210, 70, 200, 0.3), transparent 55%);
   mix-blend-mode: screen;
-  animation: page-bg-sweep-drift 26s ease-in-out infinite alternate;
+  animation: page-bg-sweep-drift 19s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
@@ -468,8 +468,8 @@ body.post-train-project {
 .post-train-project .blog-page {
   position: relative;
   z-index: 2;
-  background: rgba(18, 24, 31, 0.94);
-  backdrop-filter: blur(4px);
+  background: rgba(18, 24, 31, 0.9);
+  backdrop-filter: blur(5px);
   border: 1px solid rgba(217, 112, 201, 0.14);
   border-radius: 20px;
   margin-top: 32px;
